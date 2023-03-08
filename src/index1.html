@@ -73,19 +73,11 @@
     }
 
     function initPositionBuffer(gl) {
-      // Create a buffer for the square's positions.
-      const positionBuffer = gl.createBuffer();
-
-      // Select the positionBuffer as the one to apply buffer
-      // operations to from here out.
+      const positionBuffer = gl.createBuffer();  // 创建缓冲区，用于存储矩形的顶点位置
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-      // Now create an array of positions for the square.
       const positions = [1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0];
 
-      // Now pass the list of positions into WebGL to build the
-      // shape. We do this by creating a Float32Array from the
-      // JavaScript array, then use it to fill the current buffer.
+
       gl.bufferData(
         gl.ARRAY_BUFFER,
         new Float32Array(positions),
@@ -160,8 +152,8 @@
 
       gl.useProgram(programInfo.program);
 
-      // Set the shader uniforms
-
+      // 设置shader uniforms 变量的值
+      console.log({projectionMatrix,modelViewMatrix})
       gl.uniformMatrix4fv(
         programInfo.uniformLocations.projectionMatrix,
         false,
@@ -173,6 +165,7 @@
         modelViewMatrix
       );
 
+      // 绘制
       {
         const offset = 0;
         const vertexCount = 4;

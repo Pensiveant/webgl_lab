@@ -5,17 +5,18 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
-    integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
-    crossorigin="anonymous"
-    defer></script>
+      src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
+      integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
+      crossorigin="anonymous"
+      defer
+    ></script>
     <title>draw reangle</title>
   </head>
   <body>
     <canvas id="canvas" width="500" height="500"></canvas>
   </body>
   <script type="module">
-    import getWebgl from "./getwebgl.js";
+    import { getWebgl, loadShader, initShaderProgram } from "./core.js";
 
     // 顶点着色器
     const vsSource = `
@@ -59,57 +60,8 @@
           ),
         },
       };
-      const buffer=initBuffers(gl);
-      drawScene(gl,programInfo,buffer);
-    }
-
-    //
-    //  初始化着色器程序，让 WebGL 知道如何绘制我们的数据
-    function initShaderProgram(gl, vsSource, fsSource) {
-      const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
-      const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
-
-      // 创建着色器程序
-      const shaderProgram = gl.createProgram();
-      gl.attachShader(shaderProgram, vertexShader);
-      gl.attachShader(shaderProgram, fragmentShader);
-      gl.linkProgram(shaderProgram);
-
-      // 如果创建失败，alert
-      if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-        alert(
-          "Unable to initialize the shader program: " +
-            gl.getProgramInfoLog(shaderProgram)
-        );
-        return null;
-      }
-
-      return shaderProgram;
-    }
-
-    //
-    // 创建指定类型的着色器，上传 source 源码并编译
-    //
-    function loadShader(gl, type, source) {
-      const shader = gl.createShader(type);
-
-      // Send the source to the shader object
-      gl.shaderSource(shader, source);
-
-      // Compile the shader program
-      gl.compileShader(shader);
-
-      // See if it compiled successfully
-
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        alert(
-          "An error occurred compiling the shaders: " +
-            gl.getShaderInfoLog(shader)
-        );
-        gl.deleteShader(shader);
-        return null;
-      }
-      return shader;
+      const buffer = initBuffers(gl);
+      drawScene(gl, programInfo, buffer);
     }
 
     function initBuffers(gl) {

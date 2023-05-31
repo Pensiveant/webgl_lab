@@ -41,17 +41,19 @@ export function loadShader(gl, type, source) {
  * @param {*} fsSource
  */
 export function initShaderProgram(gl, vsSource, fsSource) {
-  const shaderProgram=gl.createProgram(); // 创建着色器程序 
+  const webglProgram = gl.createProgram(); // 创建webGL程序对象
   // 创建着色器
-  const vShader=loadShader(gl,gl.VERTEX_SHADER,vsSource);
-  const fShader=loadShader(gl,gl.FRAGMENT_SHADER,fsSource);
-  gl.attachShader(shaderProgram,vShader);
-  gl.attachShader(shaderProgram,fShader);
+  const vShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+  const fShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+  gl.attachShader(webglProgram, vShader);
+  gl.attachShader(webglProgram, fShader);
   //
-  gl.linkProgram(shaderProgram); // 连接
-   // 判断是否成功，否则报错
-   if (!gl.getProgramParameter(shaderProgram,  gl.LINK_STATUS)) {
-    throw new Error(`链接着色器程序出错：${gl.getProgramInfoLog(shaderProgram)}`);
+  gl.linkProgram(webglProgram); // 连接
+  // 判断是否成功，否则报错
+  if (!gl.getProgramParameter(webglProgram, gl.LINK_STATUS)) {
+    throw new Error(
+      `链接着色器程序出错：${gl.getProgramInfoLog(webglProgram)}`
+    );
   }
-  return shaderProgram;
+  return webglProgram;
 }

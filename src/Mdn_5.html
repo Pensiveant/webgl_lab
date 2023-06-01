@@ -20,12 +20,12 @@
 
     const vsSource = `
     attribute vec4 aVertexPosition;
-    attribute vec2 aTextureCoord;
+    attribute vec2 aTextureCoord;     // 纹理坐标
 
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
 
-    varying highp vec2 vTextureCoord;
+    varying highp vec2 vTextureCoord;  // 纹理坐标，传递到片元着色器
 
     void main(void) {
       gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
@@ -35,7 +35,7 @@
 
     // 片段着色器
     const fsSource = `
-    varying highp vec2 vTextureCoord;
+    varying highp vec2 vTextureCoord; // 纹理坐标，接收自顶点着色器
 
     uniform sampler2D uSampler;
 
@@ -349,6 +349,7 @@
       // buffer into the vertexPosition attribute.
       setPositionAttribute(gl, buffers, programInfo);
 
+      // 绑定纹理坐标缓存区到顶点着色器变量
       setTextureAttribute(gl, buffers, programInfo);
 
       // Tell WebGL which indices to use to index the vertices

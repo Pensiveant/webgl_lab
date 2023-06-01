@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
+      integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
+      crossorigin="anonymous"
+      defer
+    ></script>
+    <title>纹理贴图</title>
+  </head>
+  <body>
+    <canvas id="canvas" width="500" height="500"></canvas>
+  </body>
+  <script type="module">
+    import { getWebgl, loadShader, initShaderProgram } from "../core.js";
+
+    // 顶点着色器
+    const vsSource = `
+    attribute vec4 aVertexPosition;   
+    attribute vec2 aTextureCoord;     // 纹理坐标
+
+    uniform mat4 uModelViewMatrix;     
+    uniform mat4 uProjectionMatrix;    
+
+    varying highp vec2 vTextureCoord;  // 纹理坐标，传递到片元着色器
+
+    void main() {
+      gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+
+      vTextureCoord = aTextureCoord;
+    }
+  `;
+
+    // 片段着色器
+    const fsSource = `
+    varying highp vec2 vTextureCoord; // 纹理坐标，接收自顶点着色器
+    uniform sampler2D uSampler;
+
+
+    void main() {
+      gl_FragColor = texture2D(uSampler, vTextureCoord);
+    }
+  `;
+
+    window.onload = init;
+
+    function init() {
+      const gl = getWebgl("canvas");
+      const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+      const programInfo = {
+        program: shaderProgram,
+        attribLocations: {
+          vertexPosition: gl.getAttribLocation(
+            shaderProgram,
+            "aVertexPosition"
+          ),
+          textureCoord: gl.getAttribLocation(shaderProgram, "aTextureCoord"), // 纹理坐标位置
+        },
+        uniformLocations: {
+          projectionMatrix: gl.getUniformLocation(
+            shaderProgram,
+            "uProjectionMatrix"
+          ),
+          modelViewMatrix: gl.getUniformLocation(
+            shaderProgram,
+            "uModelViewMatrix"
+          ),
+          uSampler: gl.getUniformLocation(shaderProgram, "uSampler"),
+        },
+      };
+
+      const buffer = initBuffers(gl);
+      // 加载纹理图片
+      const texture = loadTexture(gl, "./img/panda.jpg");
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // webgl中图像纹理坐标系的v和图片的坐标Y是相反的，因此，要先把图像Y轴进行反转
+      drawScene(gl, programInfo, buffer, texture);
+    }
+
+    // 初始化缓冲区对象
+    function initBuffers(gl) {
+      const positionBuffer = initPositionBuffer(gl);
+      const textureBuffer = initTextureBuffer(gl);
+
+      return {
+        position: positionBuffer,
+        texture: textureBuffer,
+      };
+    }
+
+    function initPositionBuffer(gl) {
+      const positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      const positions = [1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0];
+
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(positions),
+        gl.STATIC_DRAW
+      );
+
+      return positionBuffer;
+    }
+
+    function setPositionAttribute(gl, buffers, programInfo) {
+      const numComponents = 2;
+      const type = gl.FLOAT;
+      const normalize = false;
+      const stride = 0;
+      const offset = 0;
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+      gl.vertexAttribPointer(
+        programInfo.attribLocations.vertexPosition,
+        numComponents,
+        type,
+        normalize,
+        stride,
+        offset
+      );
+      gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+    }
+
+    function initTextureBuffer(gl) {
+      const textureBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+      const textureCoordinates = [0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0];
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(textureCoordinates),
+        gl.STATIC_DRAW
+      );
+      return textureBuffer;
+    }
+
+    function setTextureAttribute(gl, buffers, programInfo) {
+      const numComponents = 2;
+      const type = gl.FLOAT;
+      const normalize = false;
+      const stride = 0;
+      const offset = 0;
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffers.texture);
+      gl.vertexAttribPointer(
+        programInfo.attribLocations.textureCoord,
+        numComponents,
+        type,
+        normalize,
+        stride,
+        offset
+      );
+      gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
+    }
+
+    // 加载纹理
+    function loadTexture(gl, url) {
+      const texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+
+      // 通过网络请求纹理图片，会存在延迟，先创建一个默认图形，等纹理图片加载完成后，在更新
+      const level = 0;
+      const internalFormat = gl.RGBA;
+      const width = 1;
+      const height = 1;
+      const border = 0;
+      const srcFormat = gl.RGBA;
+      const srcType = gl.UNSIGNED_BYTE;
+      const pixel = new Uint8Array([0, 0, 255, 255]); // opaque blue
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        level,
+        internalFormat,
+        width,
+        height,
+        border,
+        srcFormat,
+        srcType,
+        pixel
+      );
+
+      const image = new Image();
+      image.onload = () => {
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          level,
+          internalFormat,
+          srcFormat,
+          srcType,
+          image
+        );
+
+        // 图片的宽度和高度是否满足2的N次幂
+        if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+          gl.generateMipmap(gl.TEXTURE_2D);
+        } else {
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        }
+      };
+      image.src = url;
+
+      return texture;
+    }
+
+    function isPowerOf2(value) {
+      return (value & (value - 1)) === 0;
+    }
+
+    function drawScene(gl, programInfo, buffers, texture) {
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.clearDepth(1.0);
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LEQUAL);
+
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      const fieldOfView = (45 * Math.PI) / 180;
+      const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+      const zNear = 0.1;
+      const zFar = 100.0;
+      const projectionMatrix = mat4.create();
+
+      mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
+
+      const modelViewMatrix = mat4.create();
+      mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -6.0]);
+
+      setPositionAttribute(gl, buffers, programInfo);
+
+      // 绑定纹理坐标缓存区到顶点着色器变量
+      setTextureAttribute(gl, buffers, programInfo);
+
+      gl.useProgram(programInfo.program);
+
+      gl.uniformMatrix4fv(
+        programInfo.uniformLocations.projectionMatrix,
+        false,
+        projectionMatrix
+      );
+      gl.uniformMatrix4fv(
+        programInfo.uniformLocations.modelViewMatrix,
+        false,
+        modelViewMatrix
+      );
+
+      // Tell WebGL we want to affect texture unit 0
+      gl.activeTexture(gl.TEXTURE0);
+
+      // Bind the texture to texture unit 0
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+
+      // Tell the shader we bound the texture to texture unit 0
+      gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
+
+      {
+        const offset = 0;
+        const vertexCount = 4;
+        gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+      }
+    }
+  </script>
+</html>

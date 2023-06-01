@@ -113,26 +113,10 @@
       const modelViewMatrix = mat4.create();
 
       mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -6.0]);
-
-      {
-        const numComponents = 2;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-        gl.vertexAttribPointer(
-          programInfo.attribLocations.vertexPosition,
-          numComponents,
-          type,
-          normalize,
-          stride,
-          offset
-        );
-        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
-        // 绑定颜色数据
-        setColorAttribute(gl,buffers,programInfo);
-      }
+      setPositionAttribute(gl, buffers, programInfo);
+      
+      // 绑定颜色数据
+      setColorAttribute(gl, buffers, programInfo);
       gl.useProgram(programInfo.program);
       gl.uniformMatrix4fv(
         programInfo.uniformLocations.projectionMatrix,
@@ -193,7 +177,7 @@
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
       return colorBuffer;
     }
-    
+
     // 设置vertexColor属性
     function setColorAttribute(gl, buffers, programInfo) {
       const numComponents = 4;

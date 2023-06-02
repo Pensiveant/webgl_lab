@@ -47,7 +47,9 @@
   `;
 
     window.onload = init;
-
+    var squareRotation = 0.0;
+    var then = 0;
+    
     function init() {
       const gl = getWebgl("canvas");
       const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
@@ -76,8 +78,17 @@
       const buffer = initBuffers(gl);
       // 加载纹理图片
       const texture = loadTexture(gl, "./img/panda.jpg");
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // webgl中图像纹理坐标系的v和图片的坐标Y是相反的，因此，要先把图像Y轴进行反转
-      drawScene(gl, programInfo, buffer, texture);
+    
+
+      function render(now) {
+        now *= 0.001; // convert to seconds
+        const deltaTime = now - then;
+        then = now;
+        drawScene(gl, programInfo, buffer, texture);
+        requestAnimationFrame(render);
+      }
+
+      requestAnimationFrame(render);
     }
 
     // 初始化缓冲区对象
@@ -201,7 +212,7 @@
         }
       };
       image.src = url;
-
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // webgl中图像纹理坐标系的v和图片的坐标Y是相反的，因此，要先把图像Y轴进行反转
       return texture;
     }
 

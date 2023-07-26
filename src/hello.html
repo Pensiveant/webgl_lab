@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hello webgl</title>
+  </head>
+  <body>
+    <canvas id="glcanvas" width="500" height="500"></canvas>
+  </body>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
+    integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
+    crossorigin="anonymous"
+    defer
+  ></script>
+  <script type="module">
+    window.onload = init;
+    function init() {
+      // 获取WebGL 上下文对象
+      const canvas = document.getElementById("glcanvas");
+      const gl =
+        canvas.getContext("webgl2") ||
+        canvas.getContext("webgl") ||
+        canvas.getContext("experimental-webgl");
+
+      // 实现着色器: 顶点着色器
+      const webglProgram = gl.createProgram(); // 创建webGL程序对象
+      const vsSource = `
+        attribute vec4 aVertexPosition;
+        attribute vec4 aVertexColor;
+
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
+
+        varying lowp vec4 vColor;
+        void main() {
+          gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+          vColor = aVertexColor;
+        }
+      `;
+      const vsShader = gl.createShader(gl.VERTEX_SHADER); // 创建顶点着色器
+      gl.shaderSource(vsShader, vsSource); // 设置源码
+      gl.compileShader(vsShader); // 编译
+      gl.attachShader(webglProgram, vsShader);
+
+      // 实现着色器: 片段着色器
+      const fsSource = `
+        varying lowp vec4 vColor;
+        void main() {
+          gl_FragColor = vColor;
+        }
+      `;
+      const fsShader = gl.createShader(gl.FRAGMENT_SHADER); // 创建片段着色器
+      gl.shaderSource(fsShader, fsSource);
+      gl.compileShader(fsShader);
+      gl.attachShader(webglProgram, fsShader);
+
+      gl.linkProgram(webglProgram); // 连接
+
+      // 缓冲区数据：顶点
+      const positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      const positions = [1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0];
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(positions),
+        gl.STATIC_DRAW
+      );
+
+      // 缓冲区数据：颜色
+      const colorBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+      const colors = [
+        1.0,
+        1.0,
+        1.0,
+        1.0, // 白
+        1.0,
+        0.0,
+        0.0,
+        1.0, // 红
+        0.0,
+        1.0,
+        0.0,
+        1.0, // 绿
+        0.0,
+        0.0,
+        1.0,
+        1.0, // 蓝
+      ];
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+      // 告诉着色器如何从缓存中取数据，并运行着色器程序。
+      const programInfo = {
+        program: webglProgram,
+        attribLocations: {
+          vertexPosition: gl.getAttribLocation(webglProgram, "aVertexPosition"),
+          vertexColor: gl.getAttribLocation(webglProgram, "aVertexColor"), // 存储aVertexColor的位置
+        },
+        uniformLocations: {
+          projectionMatrix: gl.getUniformLocation(
+            webglProgram,
+            "uProjectionMatrix"
+          ),
+          modelViewMatrix: gl.getUniformLocation(
+            webglProgram,
+            "uModelViewMatrix"
+          ),
+        },
+      };
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.clearDepth(1.0);
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LEQUAL);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      //
+      const fieldOfView = (45 * Math.PI) / 180; // in radians
+      const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+      const zNear = 0.1;
+      const zFar = 100.0;
+      const projectionMatrix = mat4.create();
+      mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
+
+      //
+      const modelViewMatrix = mat4.create();
+      mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -6.0]);
+
+      // 绑定顶点数据
+      {
+        const numComponents = 2;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexPosition,
+          numComponents,
+          type,
+          normalize,
+          stride,
+          offset
+        );
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+      }
+
+      // 绑定颜色数据
+      {
+        const color_numComponents = 4;
+        const color_type = gl.FLOAT;
+        const color_normalize = false;
+        const color_stride = 0;
+        const color_offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexColor,
+          color_numComponents,
+          color_type,
+          color_normalize,
+          color_stride,
+          color_offset
+        );
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
+      }
+      gl.useProgram(programInfo.program); // 必须在gl.uniformMatrix4fv前运行，不然报错
+      gl.uniformMatrix4fv(
+        programInfo.uniformLocations.projectionMatrix,
+        false,
+        projectionMatrix
+      );
+      //
+      gl.uniformMatrix4fv(
+        programInfo.uniformLocations.modelViewMatrix,
+        false,
+        modelViewMatrix
+      );
+
+      {
+        const drawOffset = 0;
+        const vertexCount = 4;
+        gl.drawArrays(gl.TRIANGLE_STRIP, drawOffset, vertexCount);
+      }
+    }
+  </script>
+</html>

@@ -29,6 +29,13 @@
   window.onload = init;
   function init() {
     var m3 = {
+      projection: function (width, height) {
+        return [
+          2 / width, 0, 0,
+          0, -2 / height, 0,
+          -1, 1, 1
+        ]
+      },
       translation: function (tx, ty) {
         return [
           1, 0, 0,    // 第一列
@@ -100,11 +107,7 @@
     uniform mat3 u_matrix; // 变换矩阵
 
     void main() {
-      vec2 position = (u_matrix * vec3(a_position, 1)).xy;
-      vec2 zeroToOne = position / u_resolution; // convert the rectangle points from pixels to 0.0 to 1.0
-      vec2 zeroToTwo = zeroToOne * 2.0;  // convert from 0->1 to 0->2
-      vec2 clipSpace = zeroToTwo - 1.0; // convert from 0->2 to -1->+1 (clipspace)
-      gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+      gl_Position = vec4((u_matrix * vec3(a_position, 1)).xy, 0, 1);
     }
     `
     let vshader = createShader(gl, gl.VERTEX_SHADER, vshaderSource);
@@ -179,14 +182,16 @@
     gl.uniform4fv(colorLocation, color);
 
     // 计算矩阵
+    var projectionMatrix = m3.projection(
+      gl.canvas.clientWidth, gl.canvas.clientHeight);
     var translationMatrix = m3.translation(translation[0], translation[1]);
     var rotationMatrix = m3.rotation(angleInRadians);
     var scaleMatrix = m3.scaling(scale[0], scale[1]);
 
     // 矩阵相乘
-    var matrix = m3.multiply(translationMatrix, rotationMatrix);
+    var matrix = m3.multiply(projectionMatrix, translationMatrix);
+    matrix = m3.multiply(matrix, rotationMatrix);
     matrix = m3.multiply(matrix, scaleMatrix);
-
     // 设置矩阵
     gl.uniformMatrix3fv(matrixLocation, false, matrix);
 

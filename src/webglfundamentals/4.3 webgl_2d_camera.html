@@ -416,7 +416,7 @@
 
       // 计算相机在圆上的位置矩阵
       var cameraMatrix = m4.yRotation(cameraAngleRadians);
-      cameraMatrix = m4.translate(cameraMatrix, 0, 0, radius * 1.5);
+      cameraMatrix = m4.translate(cameraMatrix, 0, 0, radius * 1.5);  // 将相机移到1.5倍半径位子
 
       // 获得矩阵中相机的位置
       var cameraPosition = [
@@ -610,10 +610,12 @@
     }
   }
 
+  // 向量减法（a-b）
   function subtractVectors(a, b) {
     return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
   }
 
+  // 归一化
   function normalize(v) {
     var length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     // make sure we don't divide by 0.
@@ -624,6 +626,7 @@
     }
   }
 
+  // 叉乘(axb)
   function cross(a, b) {
     return [a[1] * b[2] - a[2] * b[1],
     a[2] * b[0] - a[0] * b[2],

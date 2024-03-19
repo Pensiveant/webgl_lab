@@ -31,7 +31,6 @@
 
     // 修改为三维矩阵方法
     var m4 = {
-
       projection: function (width, height, depth) {
         // 注意：这个矩阵翻转了 Y 轴，所以 0 在上方
         return [
@@ -59,6 +58,7 @@
         var a31 = a[3 * 4 + 1];
         var a32 = a[3 * 4 + 2];
         var a33 = a[3 * 4 + 3];
+
         var b00 = b[0 * 4 + 0];
         var b01 = b[0 * 4 + 1];
         var b02 = b[0 * 4 + 2];
@@ -75,6 +75,7 @@
         var b31 = b[3 * 4 + 1];
         var b32 = b[3 * 4 + 2];
         var b33 = b[3 * 4 + 3];
+
         return [
           b00 * a00 + b01 * a10 + b02 * a20 + b03 * a30,
           b00 * a01 + b01 * a11 + b02 * a21 + b03 * a31,
@@ -95,6 +96,7 @@
         ];
       },
 
+      // 平移
       translation: function (tx, ty, tz) {
         return [
           1, 0, 0, 0,
@@ -104,6 +106,7 @@
         ];
       },
 
+      // 绕X旋转
       xRotation: function (angleInRadians) {
         var c = Math.cos(angleInRadians);
         var s = Math.sin(angleInRadians);
@@ -116,6 +119,7 @@
         ];
       },
 
+      // 绕Y旋转
       yRotation: function (angleInRadians) {
         var c = Math.cos(angleInRadians);
         var s = Math.sin(angleInRadians);
@@ -128,6 +132,7 @@
         ];
       },
 
+      // 绕Z旋转
       zRotation: function (angleInRadians) {
         var c = Math.cos(angleInRadians);
         var s = Math.sin(angleInRadians);
@@ -140,6 +145,7 @@
         ];
       },
 
+      // 缩放
       scaling: function (sx, sy, sz) {
         return [
           sx, 0, 0, 0,

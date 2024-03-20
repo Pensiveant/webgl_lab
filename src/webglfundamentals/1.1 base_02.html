@@ -5,7 +5,20 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hello world</title>
+  <title>WebGL 基础概念</title>
+  <style lang="css">
+    body {
+      width: 100vw;
+      height: 100vh;  
+      display: flex;  
+      justify-content: center;
+      align-items: center;
+    }
+
+    #canvas {
+      border: 1px solid red;
+    }
+  </style>
 </head>
 
 <body>
@@ -22,10 +35,14 @@
     }
 
     let vshaderSource = `
-      attribute vec4 a_position; // 一个属性值，将从缓冲中获取数据
+      attribute vec2 a_position; //   屏幕像素坐标
+      uniform vec2 u_resolution;
 
       void main(){
-          gl_Position=a_position;
+        vec2 zeroToOne = a_position / u_resolution; // 归一化：像素坐标转换到 [0.0 , 1.0]
+        vec2 zeroToTwo = zeroToOne * 2.0; // [0.0 , 1.0] 转换到 [0.0 , 2.0]
+        vec2 clipSpace = zeroToTwo - 1.0; // [0.0 , 2.0] 转换为裁剪坐标[-1,1]
+        gl_Position = vec4(clipSpace, 0, 1); // [x,y,z,w]
       }
     `
     let vshader = createShader(gl, gl.VERTEX_SHADER, vshaderSource);
@@ -43,13 +60,18 @@
 
     // 提供数据
     let positionAttributeLocation = gl.getAttribLocation(program, "a_position"); // 获取顺序值的位置
+    var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+
     let positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer); // 绑定数据源到gl.ARRAY_BUFFER 绑定点（）
-    // 三个二维点坐标
+    // 
     var positions = [
-      0, 0,
-      0, 0.5,
-      0.7, 0,
+       10, 20,
+       80, 20,
+       10, 30,
+       10, 30,
+       80, 20,
+       80, 30,
     ];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
@@ -66,6 +88,8 @@
     gl.enableVertexAttribArray(positionAttributeLocation); // 开启a_position属性
     // 将绑定点绑定到缓冲数据（positionBuffer）
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    // 设置全局变量 分辨率
+    gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
 
     // 告诉属性怎么从positionBuffer中读取数据 (ARRAY_BUFFER)
     var size = 2;          // 每次迭代运行提取两个单位数据
@@ -79,7 +103,7 @@
 
     var primitiveType = gl.TRIANGLES;
     var offset = 0;
-    var count = 3;
+    var count = 6;
     gl.drawArrays(primitiveType, offset, count);
     //#endregion
   }

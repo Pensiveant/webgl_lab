@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebGL 进一步处理图像</title>
+  <style lang="css">
+    body {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #canvas {
+      border: 1px solid red;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" width="500" height="500"></canvas>
+</body>
+<script src="./js/webgl-utils.js"></script>
+<script type="module">
+  window.onload = init;
+  function init() {
+    var image = new Image();
+    image.src = "./img/leaves.jpg";
+    image.onload = function () {
+      render(image);
+    }
+  }
+
+  function render(image) {
+    /**@type WebGLContext*/
+    let gl = getWebgl();
+    if (!gl) {
+      return;
+    }
+
+    let vshaderSource = `
+      attribute vec2 a_position; //   屏幕像素坐标
+      attribute vec2 a_texCoord;
+      uniform vec2 u_resolution;
+      uniform float u_flipY;
+      
+      varying vec2 v_texCoord;
+
+      void main(){
+        vec2 zeroToOne = a_position / u_resolution; // 归一化：像素坐标转换到 [0.0 , 1.0]
+        vec2 zeroToTwo = zeroToOne * 2.0; // [0.0 , 1.0] 转换到 [0.0 , 2.0]
+        vec2 clipSpace = zeroToTwo - 1.0; // [0.0 , 2.0] 转换为裁剪坐标[-1,1]
+        gl_Position = vec4(clipSpace * vec2(1, u_flipY), 0, 1);
+        
+        v_texCoord = a_texCoord; // 将纹理坐标传给片段着色器
+      }
+    `
+    let vshader = createShader(gl, gl.VERTEX_SHADER, vshaderSource);
+
+
+    let fshaderSource = `
+    precision mediump float;
+ 
+    // 纹理
+    uniform sampler2D u_image;
+    uniform vec2 u_textureSize;
+    uniform float u_kernel[9];
+    uniform float u_kernelWeight;
+      
+    // 从顶点着色器传入的纹理坐标
+    varying vec2 v_texCoord;
+      
+    void main() {
+        vec2 onePixel = vec2(1.0, 1.0) / u_textureSize;
+        vec4 colorSum =
+          texture2D(u_image, v_texCoord + onePixel * vec2(-1, -1)) * u_kernel[0] +
+          texture2D(u_image, v_texCoord + onePixel * vec2( 0, -1)) * u_kernel[1] +
+          texture2D(u_image, v_texCoord + onePixel * vec2( 1, -1)) * u_kernel[2] +
+          texture2D(u_image, v_texCoord + onePixel * vec2(-1,  0)) * u_kernel[3] +
+          texture2D(u_image, v_texCoord + onePixel * vec2( 0,  0)) * u_kernel[4] +
+          texture2D(u_image, v_texCoord + onePixel * vec2( 1,  0)) * u_kernel[5] +
+          texture2D(u_image, v_texCoord + onePixel * vec2(-1,  1)) * u_kernel[6] +
+          texture2D(u_image, v_texCoord + onePixel * vec2( 0,  1)) * u_kernel[7] +
+          texture2D(u_image, v_texCoord + onePixel * vec2( 1,  1)) * u_kernel[8] ;
+      
+        // 只把rgb值求和除以权重
+        // 将阿尔法值设为 1.0
+        gl_FragColor = vec4((colorSum / u_kernelWeight).rgb, 1.0);
+    }
+    `
+    let fshader = createShader(gl, gl.FRAGMENT_SHADER, fshaderSource);
+    let program = createProgram(gl, vshader, fshader);
+
+    // 提供数据
+    var positionLocation = gl.getAttribLocation(program, "a_position");
+    var texcoordLocation = gl.getAttribLocation(program, "a_texCoord");
+    var textureSizeLocation = gl.getUniformLocation(program, "u_textureSize");
+    var resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+    var kernelLocation = gl.getUniformLocation(program, "u_kernel[0]");
+    var kernelWeightLocation = gl.getUniformLocation(program, "u_kernelWeight");
+    var flipYLocation = gl.getUniformLocation(program, "u_flipY");
+
+    let positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer); // 绑定数据源到gl.ARRAY_BUFFER 绑定点（）
+    // 
+    setRectangle(gl, 0, 0, image.width, image.height);
+
+
+    // 给矩形提供纹理坐标
+    var texCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      0.0, 0.0,
+      1.0, 0.0,
+      0.0, 1.0,
+      0.0, 1.0,
+      1.0, 0.0,
+      1.0, 1.0]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(texcoordLocation);
+    gl.vertexAttribPointer(texcoordLocation, 2, gl.FLOAT, false, 0, 0);
+
+    // 创建纹理
+    var texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    // 创建一个纹理并写入图像
+    var originalImageTexture = createAndSetupTexture(gl);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+
+    // 创建两个纹理绑定到帧缓冲
+    var textures = [];
+    var framebuffers = [];
+    for (var ii = 0; ii < 2; ++ii) {
+      var texture = createAndSetupTexture(gl);
+      textures.push(texture);
+
+      // 设置纹理大小和图像大小一致
+      gl.texImage2D(
+        gl.TEXTURE_2D, 0, gl.RGBA, image.width, image.height, 0,
+        gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+      // 创建一个帧缓冲
+      var fbo = gl.createFramebuffer();
+      framebuffers.push(fbo);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+
+      // 绑定纹理到帧缓冲
+      gl.framebufferTexture2D(
+        gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+    }
+
+    // 定义一些卷积核
+    var kernels = {
+      normal: [
+        0, 0, 0,
+        0, 1, 0,
+        0, 0, 0
+      ],
+      gaussianBlur: [
+        0.045, 0.122, 0.045,
+        0.122, 0.332, 0.122,
+        0.045, 0.122, 0.045
+      ],
+      unsharpen: [
+        -1, -1, -1,
+        -1, 9, -1,
+        -1, -1, -1
+      ],
+      emboss: [
+        -2, -1, 0,
+        -1, 1, 1,
+        0, 1, 2
+      ]
+    };
+
+    // 将要使用的效果列表
+    var effectsToApply = [
+      "gaussianBlur",
+      "emboss",
+      "gaussianBlur",
+      "unsharpen"
+    ];
+
+
+    //#region 绘制场景（每次要渲染或者绘制时执行）
+    webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    // 清空画布
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // 告诉它用我们之前写好的着色程序（一个着色器对）
+    gl.useProgram(program);
+
+    gl.enableVertexAttribArray(positionLocation); // 开启a_position属性
+    // 将绑定点绑定到缓冲数据（positionBuffer）
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+    // 设置全局变量 分辨率
+    gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
+
+    // 告诉属性怎么从positionBuffer中读取数据 (ARRAY_BUFFER)
+    var size = 2;          // 每次迭代运行提取两个单位数据
+    var type = gl.FLOAT;   // 每个单位的数据类型是32位浮点型
+    var normalize = false; // 不需要归一化数据
+    var stride = 0;        // 0 = 移动单位数量 * 每个单位占用内存（sizeof(type)）
+    // 每次迭代运行运动多少内存到下一个数据开始点
+    var offset = 0;        // 从缓冲起始位置开始读取
+    gl.vertexAttribPointer(
+      positionLocation, size, type, normalize, stride, offset);
+
+
+    gl.enableVertexAttribArray(texcoordLocation);
+    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+    var size = 2;          // 2 components per iteration
+    var type = gl.FLOAT;   // the data is 32bit floats
+    var normalize = false; // don't normalize the data
+    var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+    var offset = 0;        // start at the beginning of the buffer
+    gl.vertexAttribPointer(
+      texcoordLocation, size, type, normalize, stride, offset);
+
+    gl.uniform2f(textureSizeLocation, image.width, image.height);
+
+    // 从原始图像开始
+    gl.bindTexture(gl.TEXTURE_2D, originalImageTexture);
+
+    // 在渲染效果时不翻转y轴
+    gl.uniform1f(flipYLocation, 1);
+
+    // 循环施加每一种渲染效果
+    for (var ii = 0; ii < effectsToApply.length; ++ii) {
+      // 使用两个帧缓冲中的一个
+      setFramebuffer(framebuffers[ii % 2], image.width, image.height);
+
+      drawWithKernel(effectsToApply[ii]);
+
+      // 下次绘制时使用刚才的渲染结果
+      gl.bindTexture(gl.TEXTURE_2D, textures[ii % 2]);
+    }
+
+    // 最后将结果绘制到画布
+    gl.uniform1f(flipYLocation, -1);  // 需要绕y轴翻转
+    setFramebuffer(null, canvas.width, canvas.height);
+    drawWithKernel("normal");
+
+    function setFramebuffer(fbo, width, height) {
+      // 设定当前使用帧缓冲
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+
+      // 告诉着色器分辨率是多少
+      gl.uniform2f(resolutionLocation, width, height);
+
+      // 告诉WebGL帧缓冲需要的视图大小
+      gl.viewport(0, 0, width, height);
+    }
+
+    function drawWithKernel(name) {
+      // 设置卷积核
+      gl.uniform1fv(kernelLocation, kernels[name]);
+      gl.uniform1f(kernelWeightLocation, computeKernelWeight(kernels[name]));
+
+      // 画出矩形
+      var primitiveType = gl.TRIANGLES;
+      var offset = 0;
+      var count = 6;
+      gl.drawArrays(primitiveType, offset, count);
+    }
+
+    //#endregion
+  }
+
+
+
+  function createAndSetupTexture(gl) {
+    var texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    // 设置材质，这样我们可以对任意大小的图像进行像素操作
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+    return texture;
+  }
+
+
+  function computeKernelWeight(kernel) {
+    var weight = kernel.reduce(function (prev, curr) {
+      return prev + curr;
+    });
+    return weight <= 0 ? 1 : weight;
+  }
+
+  function setRectangle(gl, x, y, width, height) {
+    var x1 = x;
+    var x2 = x + width;
+    var y1 = y;
+    var y2 = y + height;
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      x1, y1,
+      x2, y1,
+      x1, y2,
+      x1, y2,
+      x2, y1,
+      x2, y2,
+    ]), gl.STATIC_DRAW);
+  }
+
+  function getWebgl() {
+    let canvas = document.querySelector("#canvas");
+    let gl = canvas.getContext('webgl');
+    return gl;
+  }
+
+  function createShader(gl, type, source) {
+    let shader = gl.createShader(type); // 创建着色器对象
+    gl.shaderSource(shader, source); // 提供数据源
+    gl.compileShader(shader); // // 编译 -> 生成着色器 
+    var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    if (success) {
+      return shader;
+    }
+    gl.deleteShader(shader);
+  }
+
+  // 将两个着色器链接到一个 program（着色程序）
+  function createProgram(gl, vertexShader, fragmentShader) {
+    var program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    var success = gl.getProgramParameter(program, gl.LINK_STATUS);
+    if (success) {
+      return program;
+    }
+
+    gl.deleteProgram(program);
+  }
+
+
+
+</script>
+
+</html>

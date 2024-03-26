@@ -40,7 +40,7 @@
 
     let vshaderSource = `
     attribute vec4 a_position;
-    attribute vec3 a_normal;
+    attribute vec3 a_normal; // 法向量
 
     
     uniform mat4 u_matrix;
@@ -62,7 +62,7 @@
       // 从顶点着色器中传入
       varying vec3 v_normal;
  
-      uniform vec3 u_reverseLightDirection;
+      uniform vec3 u_reverseLightDirection; // 灯光反方向
       uniform vec4 u_color;
 
       void main() {
@@ -158,7 +158,7 @@
       var offset = 0;        // 从绑定缓冲的起始处开始
       gl.vertexAttribPointer(normalLocation, size, type, normalize, stride, offset)
 
-      const fRotationRadians = degToRad(90);
+      const fRotationRadians = degToRad(0); // 绕Y旋转角度
 
       // 计算投影矩阵
       var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
@@ -186,7 +186,7 @@
       // 设置使用的颜色
       gl.uniform4fv(colorLocation, [0.2, 1, 0.2, 1]); // green
 
-      // 设置光线方向
+      // 设置光线方向（ x = 0.5 说明光线是从右往左照，y = 0.7 说明光线从上方往下照， z = 1 说明光线从在场景前方。）
       gl.uniform3fv(reverseLightDirectionLocation, m4.normalize([0.5, 0.7, 1]));
 
 

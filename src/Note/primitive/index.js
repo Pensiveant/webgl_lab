@@ -38,14 +38,14 @@ let posBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
 var position=[
     // 第一个三角形
-    -0.5,0.5, // 顶点1
-    0.5,0.5,  // 顶点2
-    -0.5,-0.5, // 顶点3
+    -0.5,0.5, // 顶点v0
+    0.5,0.5,  // 顶点v1
+    -0.5,-0.5, // 顶点v2
 
     // 第二个三角形
-    0.5,0.5,  // 顶点2
-    -0.5,-0.5, // 顶点3
-    0.5,-0.5, // 顶点4
+    0.5,0.5,  // 顶点v1
+    -0.5,-0.5, // 顶点v2
+    0.5,-0.5, // 顶点v3
 ];
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(position), gl.STATIC_DRAW);
 

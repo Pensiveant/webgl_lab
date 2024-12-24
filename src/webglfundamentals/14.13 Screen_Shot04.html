@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>从画布中截屏</title>
+  <style lang="css">
+    .spread {
+      display: flex;
+      font-size: x-small;
+      text-align: center;
+    }
+
+    canvas {
+      margin: 5px;
+      background: pink;
+    }
+
+    #c3:focus {
+      outline: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div>click a canvas then press a key</div>
+  <div class="spread">
+    <div>
+      <canvas width="100" height="100" id="c1"></canvas>
+      <div>tabindex not set</div>
+    </div>
+    <div>
+      <canvas width="100" height="100" id="c2" tabindex="0"></canvas>
+      <div>focus style not set</div>
+    </div>
+    <div>
+      <canvas width="100" height="100" id="c3" tabindex="1"></canvas>
+      <div>tabindex and<br />focus style set</div>
+    </div>
+  </div>
+</body>
+
+<script src="./js/webgl-utils.js"></script>
+<script src="./js/m4.js"></script>
+
+<script type="module">
+  window.onload = main;
+
+  function main() {
+
+    document.querySelectorAll('canvas').forEach((canvas) => {
+      const ctx = canvas.getContext('2d');
+
+      function draw(str) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(str, canvas.width / 2, canvas.height / 2);
+      }
+      draw(canvas.id);
+
+      canvas.addEventListener('focus', () => {
+        draw('has focus press a key');
+      });
+
+      canvas.addEventListener('blur', () => {
+        draw('lost focus');
+      });
+
+      canvas.addEventListener('keydown', (e) => {
+        draw(`keyCode: ${e.keyCode}`);
+      });
+    });
+
+  }
+</script>
+
+</html>

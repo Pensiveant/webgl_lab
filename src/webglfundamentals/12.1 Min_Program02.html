@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebGL 最小的程序</title>
+  <style lang="css">
+    body {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #c {
+      border: 1px solid red;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="c" width="500" height="500"></canvas>
+</body>
+
+<script src="./js/webgl-utils.js"></script>
+<script src="./js/m4.js"></script>
+<script src="./js/headdata.js"></script>
+<script src="./js/webgl-lessons-ui.js"></script>
+
+<script type="module">
+  window.onload = main;
+
+
+  function main() {
+    const gl = document.querySelector('#c').getContext('webgl');
+
+    const vs = `
+// vertex shader
+void main() {
+  gl_Position = vec4(0, 0, 0, 1);  // center
+  gl_PointSize = 120.0;
+} 
+`;
+
+    const fs = `
+// fragment shader
+precision mediump float;
+void main() {
+  gl_FragColor = vec4(1, 0, 0, 1);  // red
+}
+`;
+
+    // setup GLSL program
+    const program = webglUtils.createProgramFromSources(gl, [vs, fs]);
+    gl.useProgram(program);
+
+    const offset = 0;
+    const count = 1;
+    gl.drawArrays(gl.POINTS, offset, count);
+
+  }
+</script>
+
+</html>

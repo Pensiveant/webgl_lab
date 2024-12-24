@@ -24,7 +24,7 @@
 <body>
   <canvas id="canvas" width="500" height="500"></canvas>
 </body>
-<script src="./js/webgl-utils.js"></script>
+<script src="./lib/webgl-utils.js"></script>
 <script type="module">
   window.onload = init;
   function init() {
@@ -101,6 +101,7 @@
     return gl;
   }
 
+  
   function createShader(gl, type, source) {
     let shader = gl.createShader(type); // 创建着色器对象
     gl.shaderSource(shader, source); // 提供数据源

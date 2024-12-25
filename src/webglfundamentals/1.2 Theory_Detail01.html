@@ -16,13 +16,47 @@
     }
 
     #canvas {
-      border: 1px solid red;
+      border: 1px solid black;
+    }
+
+    .canvas-box {
+      position: relative;
+    }
+
+    .canvas-box::before {
+      position: absolute;
+      top: 0;
+      left: 0;
+      content: '';
+      width: 1px;
+      height: 700px;
+      border-right: 1px solid red;
+    }
+
+    .canvas-box::after {
+      position: absolute;
+      top: 0;
+      left: 0;
+      content: '';
+      width: 700px;
+      height: 1px;
+      border-bottom: 1px solid red;
+    }
+
+    .gman-widget-outer {
+      display: flex;
+    }
+
+    .gman-widget-value {
+      order: 1;
     }
   </style>
 </head>
 
 <body>
-  <canvas id="canvas" width="500" height="500"></canvas>
+  <div class="canvas-box">
+    <canvas id="canvas" width="500" height="500"></canvas>
+  </div>
   <div id="uiContainer">
     <div id="ui">
       <div id="x"></div>
@@ -45,9 +79,9 @@
     // Multiply the position by the matrix.
     gl_Position = vec4((u_matrix * vec3(a_position, 1)).xy, 0, 1);
   
-    // 从裁减空间转换到颜色空间
-    // 裁减空间范围 -1.0 到 +1.0
-    // 颜色空间范围 0.0 到 1.0
+    // 从裁减空间[-1.0,1.0]转换到颜色空间[0.0,1.0]
+    // gl_Position * 0.5 -> [-0.5,0.5]
+    //  + 0.5 -> [0.0,1.0]
     v_color = gl_Position * 0.5 + 0.5;
   }
   </script>

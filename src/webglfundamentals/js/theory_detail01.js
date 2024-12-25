@@ -26,7 +26,7 @@ function main() {
   // Set Geometry.
   setGeometry(gl);
 
-  var translation = [200, 150];
+  var translation = [0, 0];
   var angleInRadians = 0;
   var scale = [1, 1];
 
@@ -129,9 +129,9 @@ function setGeometry(gl) {
   gl.bufferData(
     gl.ARRAY_BUFFER,
     new Float32Array([
-        0, -100,        // 点1
-        150, 125,       // 点2
-        -175, 100       // 点3
+        0, 0,        // 点1：屏幕坐标系（0px,0px）
+        150, 0,       // 点2：屏幕坐标系（150px,0px）
+        0, 100       // 点3：屏幕坐标系（0px,100px）
     ]),
     gl.STATIC_DRAW
   );

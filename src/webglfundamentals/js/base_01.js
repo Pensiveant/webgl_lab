@@ -78,9 +78,9 @@ function init() {
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer); // 绑定数据源到gl.ARRAY_BUFFER 绑定点
   // 三个二维点坐标
   var positions = [
-     0, 0,
-     0, 0.5, 
-     0.7, 0
+     0, 0,      // 点1：裁剪坐标 (0,0)    ->  (250,250)
+     0, 0.5,    // 点2：裁剪坐标 (0,0.5)  ->  (250,250+125)
+     0.7, 0     // 点3：裁剪坐标 (0.7,0.5) ->  (250-125,250+125)
     ];
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW); //  复制32位浮点型数据序列(new Float32Array(positions))到GPU的positionBuffer对象上
 

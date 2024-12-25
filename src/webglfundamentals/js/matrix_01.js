@@ -95,12 +95,10 @@ function main() {
       // set the color
       gl.uniform4fv(colorLocation, color);
   
-      // Compute the matrices
+      // 计算变换矩阵：平移->旋转-> 缩放
       var translationMatrix = m3.translation(translation[0], translation[1]);
       var rotationMatrix = m3.rotation(angleInRadians);
       var scaleMatrix = m3.scaling(scale[0], scale[1]);
-  
-      // Multiply the matrices.
       var matrix = m3.multiply(translationMatrix, rotationMatrix);
       matrix = m3.multiply(matrix, scaleMatrix);
   
@@ -116,6 +114,7 @@ function main() {
   }
   
   var m3 = {
+    // 平移
     translation: function(tx, ty) {
       return [
         1, 0, 0,
@@ -124,6 +123,7 @@ function main() {
       ];
     },
   
+    // 旋转
     rotation: function(angleInRadians) {
       var c = Math.cos(angleInRadians);
       var s = Math.sin(angleInRadians);
@@ -134,6 +134,7 @@ function main() {
       ];
     },
   
+    // 缩放
     scaling: function(sx, sy) {
       return [
         sx, 0, 0,
@@ -142,16 +143,18 @@ function main() {
       ];
     },
   
+    // 点乘
     multiply: function(a, b) {
-      var a00 = a[0 * 3 + 0];
-      var a01 = a[0 * 3 + 1];
-      var a02 = a[0 * 3 + 2];
-      var a10 = a[1 * 3 + 0];
-      var a11 = a[1 * 3 + 1];
-      var a12 = a[1 * 3 + 2];
-      var a20 = a[2 * 3 + 0];
-      var a21 = a[2 * 3 + 1];
-      var a22 = a[2 * 3 + 2];
+      var a00 = a[0 * 3 + 0]; // a[0]
+      var a01 = a[0 * 3 + 1]; // a[1]
+      var a02 = a[0 * 3 + 2]; // a[2]
+      var a10 = a[1 * 3 + 0]; // a[3]
+      var a11 = a[1 * 3 + 1]; // a[4]
+      var a12 = a[1 * 3 + 2]; // a[5]
+      var a20 = a[2 * 3 + 0]; // a[6]
+      var a21 = a[2 * 3 + 1]; // a[7]
+      var a22 = a[2 * 3 + 2]; // a[8]
+
       var b00 = b[0 * 3 + 0];
       var b01 = b[0 * 3 + 1];
       var b02 = b[0 * 3 + 2];

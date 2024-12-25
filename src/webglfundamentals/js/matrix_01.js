@@ -143,7 +143,7 @@ function main() {
       ];
     },
   
-    // 点乘
+    // 点乘：a*b ，即矩阵点乘。由于都是按列存储
     multiply: function(a, b) {
       var a00 = a[0 * 3 + 0]; // a[0]
       var a01 = a[0 * 3 + 1]; // a[1]

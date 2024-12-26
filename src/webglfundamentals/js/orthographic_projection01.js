@@ -128,10 +128,10 @@ function main() {
   var m4 = {
     projection: function(width, height, depth) {
        // 注意：这个矩阵翻转了 Y 轴，所以 0 在上方
-       // x'=x*2/width
-       // y'=y*-2/height
+       // x'=x*2/width-1
+       // y'=y*-2/height+1
        // z'=z*2/depth
-       // w'=-x+y+w
+       // w'=-1
       return [
          2 / width, 0, 0, 0,
          0, -2 / height, 0, 0,

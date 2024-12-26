@@ -51,8 +51,7 @@
     // Multiply the position by the matrix.
     vec4 position = u_matrix * a_position;
   
-    // Adjust the z to divide by
-    float zToDivideBy = 1.0 + position.z * u_fudgeFactor;
+    float zToDivideBy = 1.0 + position.z * u_fudgeFactor; // z的范围为[-1,1]，调整除数范围到[0,2 * fudgeFactor]
   
     // Divide x and y by z.
     gl_Position = vec4(position.xy / zToDivideBy, position.zw);

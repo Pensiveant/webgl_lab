@@ -54,8 +54,7 @@
     // Adjust the z to divide by
     float zToDivideBy = 1.0 + position.z * u_fudgeFactor;
   
-    // Divide x and y by z.
-    gl_Position = vec4(position.xyz, zToDivideBy);
+    gl_Position = vec4(position.xyz, zToDivideBy); // x,y,z,w值会自动除以W
   
     // Pass the color to the fragment shader.
     v_color = a_color;

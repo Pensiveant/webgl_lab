@@ -34,8 +34,8 @@ function main() {
       return d * Math.PI / 180;
     }
   
-    var translation = [45, 150, 0];
-    var rotation = [degToRad(40), degToRad(25), degToRad(325)];
+    var translation = [0, 0, 0];
+    var rotation = [degToRad(0), degToRad(0), degToRad(0)];
     var scale = [1, 1, 1];
     var color = [Math.random(), Math.random(), Math.random(), 1];
   
@@ -106,7 +106,7 @@ function main() {
       // set the color
       gl.uniform4fv(colorLocation, color);
   
-      // Compute the matrices
+      // 计算变换矩阵
       var matrix = m4.projection(gl.canvas.clientWidth, gl.canvas.clientHeight, 400);
       matrix = m4.translate(matrix, translation[0], translation[1], translation[2]);
       matrix = m4.xRotate(matrix, rotation[0]);
@@ -126,9 +126,12 @@ function main() {
   }
   
   var m4 = {
-  
     projection: function(width, height, depth) {
-      // Note: This matrix flips the Y axis so 0 is at the top.
+       // 注意：这个矩阵翻转了 Y 轴，所以 0 在上方
+       // x'=x*2/width
+       // y'=y*-2/height
+       // z'=z*2/depth
+       // w'=-x+y+w
       return [
          2 / width, 0, 0, 0,
          0, -2 / height, 0, 0,
@@ -265,12 +268,13 @@ function main() {
     },
   
   };
-  // Fill the buffer with the values that define a letter 'F'.
+
+  // 图形F对应的顶点缓冲数据
   function setGeometry(gl) {
     gl.bufferData(
         gl.ARRAY_BUFFER,
         new Float32Array([
-            // left column
+            // 左竖
               0,   0,  0,
              30,   0,  0,
               0, 150,  0,
@@ -278,7 +282,7 @@ function main() {
              30,   0,  0,
              30, 150,  0,
   
-            // top rung
+            // 上横
              30,   0,  0,
             100,   0,  0,
              30,  30,  0,
@@ -286,7 +290,7 @@ function main() {
             100,   0,  0,
             100,  30,  0,
   
-            // middle rung
+            // 下横
              30,  60,  0,
              67,  60,  0,
              30,  90,  0,

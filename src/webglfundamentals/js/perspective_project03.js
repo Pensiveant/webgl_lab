@@ -138,7 +138,7 @@ function main() {
       gl.vertexAttribPointer(
           colorLocation, size, type, normalize, stride, offset);
   
-      // Compute the matrices
+      // 计算变换矩阵
       var matrix = makeZToWMatrix(fudgeFactor);
       matrix = m4.multiply(matrix, m4.projection(gl.canvas.clientWidth, gl.canvas.clientHeight, 400));
       matrix = m4.translate(matrix, translation[0], translation[1], translation[2]);
@@ -158,6 +158,8 @@ function main() {
     }
   }
   
+
+  // 实现将z值传递给w，WebGL会将我们提供给gl_Position 的 x,y,z,w 值自动除以这个w 
   function makeZToWMatrix(fudgeFactor) {
     return [
       1, 0, 0, 0,

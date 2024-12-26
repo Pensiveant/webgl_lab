@@ -162,8 +162,16 @@ function main() {
   
   var m4 = {
   
+    /**
+     * 
+     * @param {*} fieldOfViewInRadians 视场角
+     * @param {*} aspect 长宽比
+     * @param {*} near 近截面
+     * @param {*} far 远截面
+     * @returns 
+     */
     perspective: function(fieldOfViewInRadians, aspect, near, far) {
-      var f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewInRadians);
+      var f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewInRadians); // tan(90-0.5*视场角)=0.5*width/near
       var rangeInv = 1.0 / (near - far);
   
       return [

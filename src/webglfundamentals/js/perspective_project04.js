@@ -171,7 +171,7 @@ function main() {
      * @returns 
      */
     perspective: function(fieldOfViewInRadians, aspect, near, far) {
-      var f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewInRadians); // tan(90-0.5*视场角)=0.5*width/near
+      var f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewInRadians); // tan(90-0.5*视场角)=1/tan*(0.5*视场角)
       var rangeInv = 1.0 / (near - far);
   
       return [

@@ -1,22 +1,15 @@
+import {requestFile} from "../core/index.js"
+
 // 获取渲染上下文
 /** @type {HTMLCanvasElement} */
 let canvas = document.getElementById("canvas");
 let gl = canvas.getContext("webgl");
 
 // 顶点着色器
-let vertex = `
-    attribute vec4 a_position;
-    void main() {
-        gl_Position =a_position;
-    }
-`;
+let vertex = await requestFile('./glsl.vs');
 
 // 片元着色器
-let fragment = `
-    void main() {
-        gl_FragColor=vec4(199.0/255.0,237.0/255.0,204.0/255.0,1.0);
-    }
-`;
+let fragment = await requestFile('./glsl.fs');;
 
 // 上传代码并编译为着色器
 let vertexShader = gl.createShader(gl.VERTEX_SHADER);

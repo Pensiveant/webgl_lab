@@ -160,10 +160,13 @@ function main() {
     }
   }
   
+  // 向量相减
   function subtractVectors(a, b) {
     return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
   }
   
+  
+  // 单位化向量
   function normalize(v) {
     var length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     // make sure we don't divide by 0.
@@ -174,6 +177,7 @@ function main() {
     }
   }
   
+  // 计算叉乘
   function cross(a, b) {
     return [a[1] * b[2] - a[2] * b[1],
             a[2] * b[0] - a[0] * b[2],
@@ -184,6 +188,7 @@ function main() {
   
   var m4 = {
   
+    // 计算“朝向”矩阵
     lookAt: function(cameraPosition, target, up) {
       var zAxis = normalize(
           subtractVectors(cameraPosition, target));

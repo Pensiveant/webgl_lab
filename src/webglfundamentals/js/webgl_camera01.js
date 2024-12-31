@@ -104,23 +104,24 @@ function main() {
           colorLocation, size, type, normalize, stride, offset);
   
   
-      var numFs = 5;
-      var radius = 200;
-  
+
       // Compute the projection matrix
       var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
       var zNear = 1;
       var zFar = 2000;
       var projectionMatrix = m4.perspective(fieldOfViewRadians, aspect, zNear, zFar);
   
-      // Compute a matrix for the camera
-      var cameraMatrix = m4.yRotation(cameraAngleRadians);
-      cameraMatrix = m4.translate(cameraMatrix, 0, 0, radius * 1.5);
+      // 计算相机矩阵
+      var numFs = 5;
+      var radius = 200;
   
-      // Make a view matrix from the camera matrix
-      var viewMatrix = m4.inverse(cameraMatrix);
+      var cameraMatrix = m4.yRotation(cameraAngleRadians);              // 绕y旋转cameraAngleRadians
+      cameraMatrix = m4.translate(cameraMatrix, 0, 0, radius * 1.5);    // z移动到半径的1.5倍处
   
-      // Compute a view projection matrix
+      // 通过相机矩阵计算视图矩阵
+      var viewMatrix = m4.inverse(cameraMatrix);    
+  
+     // 计算组合矩阵
       var viewProjectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
   
       for (var ii = 0; ii < numFs; ++ii) {
@@ -128,8 +129,8 @@ function main() {
         var x = Math.cos(angle) * radius;
         var y = Math.sin(angle) * radius;
   
-        // starting with the view projection matrix
-        // compute a matrix for the F
+        // 从视图投影矩阵开始
+        // 计算 F 的矩阵
         var matrix = m4.translate(viewProjectionMatrix, x, 0, y);
   
         // Set the matrix.

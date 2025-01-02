@@ -1,3 +1,5 @@
+import m4 from "./m4.js";
+
 async function requestFile(filePath) {
   return new Promise((resolve, reject) => {
     let xhr = new XMLHttpRequest();
@@ -45,8 +47,8 @@ function createShader(gl, type, source) {
 /**
  * 创建渲染程序
  * @param {WebGLRenderingContext} gl
- * @param {Array<Shader>} shaders 
- * @returns 
+ * @param {Array<Shader>} shaders
+ * @returns
  */
 function createProgram(gl, shaders) {
   let program = gl.createProgram();
@@ -58,4 +60,4 @@ function createProgram(gl, shaders) {
   return program;
 }
 
-export { requestFile, getWebgl, createShader, createProgram };
+export { requestFile, getWebgl, createShader, createProgram, m4 };
